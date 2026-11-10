@@ -6,7 +6,7 @@
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || auth.uid === 'WyMkt1Cvv7eJFFETAtCJ1NH8CfC3')",
         ".write": "auth != null && auth.uid === 'WyMkt1Cvv7eJFFETAtCJ1NH8CfC3'",
-        ".validate": "newData.isString() && (newData.val() === 'admin' || newData.val() === 'responsable' || newData.val() === 'reception')"
+        ".validate": "newData.isString() && (newData.val() === 'responsable' || newData.val() === 'reception' || (newData.val() === 'admin' && $uid === 'WyMkt1Cvv7eJFFETAtCJ1NH8CfC3'))"
       }
     },
     "shared": {
@@ -142,9 +142,10 @@
       },
       "prices": {
         "$productId": {
-          ".write": "auth != null && auth.uid === 'WyMkt1Cvv7eJFFETAtCJ1NH8CfC3' && $productId.matches(/^p(00[1-9]|0[1-6][0-9]|07[0-8])$/)",
-          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000 && newData.val() * 100 % 1 === 0"
-        }
+          ".write": "auth != null && auth.uid === 'WyMkt1Cvv7eJFFETAtCJ1NH8CfC3' && $productId.matches(/^p(00[1-9]|0[1-6][0-9]|07[0-8])$/) && newData.exists()",
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000"
+        },
+        ".validate": "newData.child('p033').val() === newData.child('p036').val() && newData.child('p034').val() === newData.child('p037').val() && newData.child('p035').val() === newData.child('p038').val()"
       }
     }
   }
