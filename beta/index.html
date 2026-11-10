@@ -1385,7 +1385,7 @@ async function saveThresholds(){
  const changed=Object.fromEntries(Object.entries(out).filter(([key])=>dirtyThresholds.has(key)));if(!Object.keys(changed).length)return toast('Aucun seuil modifié.');await cloudCall('writeThresholds',changed,()=>dirtyThresholds.clear());
 }
 async function savePrices(){
- const out={};for(const el of document.querySelectorAll('.tariff')){const id=el.dataset.tariff,value=el.value.trim();if(!PRODUCT_BY_ID[id])continue;if(value===''){out[id]=null;continue}const n=Number(value);if(!Number.isFinite(n)||n<0||n>10000)return toast('Tarif invalide.');out[id]=n}
+ const out={};for(const el of document.querySelectorAll('.tariff')){const id=el.dataset.tariff,value=el.value.trim();if(!PRODUCT_BY_ID[id])continue;if(value==='')return toast('Un tarif ne peut pas être vide dans la V6 collaborative. Vérifiez le prix, puis réessayez.');const n=Number(value);if(!Number.isFinite(n)||n<0||n>10000)return toast('Tarif invalide.');out[id]=n}
  // Alignement Pelican/Heineken par contenance, voulu par l'équipe.
  for(const hkn of PRODUCTS.filter(p=>p.stockKey==='Heineken pression')){
    const pel=PRODUCTS.find(p=>p.stockKey==='Pelican pression'&&p.format===hkn.format);
