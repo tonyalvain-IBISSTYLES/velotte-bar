@@ -53,7 +53,16 @@ L'utilisateur a confirmé les résultats :
 
 ## Mise à jour après les contrôles regroupés
 
-- **44/44 tests officiels Firebase Emulator réussis** dans GitHub Actions, y compris une sauvegarde JSON et sa restauration intégrale dans un dossier isolé de l'émulateur.
+- **47/47 tests officiels Firebase Emulator réussis** dans GitHub Actions, y compris une sauvegarde JSON et sa restauration intégrale dans un dossier isolé de l'émulateur.
 - L'application V6 bêta corrigée et le fichier `firebase.rules.v6.json` ont été transférés sur `main` le 10 novembre 2026.
 - Ces commits GitHub **ne publient pas les règles dans Firebase Console** et ne modifient pas les données en production.
 - Il reste à effectuer la sauvegarde réelle, valider le catalogue, initialiser les tarifs et publier les règles avec intervention de l'administrateur.
+
+
+## Finalisation du code et de la sauvegarde — 10 novembre 2026
+
+- Le site GitHub Pages sert désormais la version bêta corrigée depuis `main/beta/index.html`.
+- L'export administrateur fonctionne avant l'activation des nouvelles règles (données seulement), puis inclut les rôles après activation. Les comptes Firebase Authentication ne sont jamais exportés par le site.
+- Les règles officielles destinées à l'activation sont dans `firebase.rules.v6.json` sur la branche `main`.
+- 47 tests avec le moteur Firebase, dont contrôle des droits de lecture des rôles et restitution d'une sauvegarde complète en environnement isolé, ont réussi sur `main`.
+- **Firebase en production n'a pas été modifié par les changements GitHub.** La mise en service doit respecter la procédure `MISE_EN_SERVICE_V6.md`.
