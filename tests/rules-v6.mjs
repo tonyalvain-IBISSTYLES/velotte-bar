@@ -47,6 +47,9 @@ try{
  await expect('UID sans role ne peut pas lire /shared',outsider.ref('/shared').get(),false);
  await expect('Administrateur lit /shared',admin.ref('/shared').get());
  await expect('Réception lit /shared',reception.ref('/shared').get());
+ await expect('Admin peut exporter tous les rôles',admin.ref('/roles').get());
+ await expect('Réception ne peut pas lire la liste des rôles',reception.ref('/roles').get(),false);
+ await expect('Réception peut lire uniquement son rôle',reception.ref('/roles/TEST_RECEPTION').get());
  await expect('UID inconnu ne peut pas écrire',outsider.ref('/shared/thresholds/s005').set(5),false);
  await expect('Chemin inconnu interdit à admin',admin.ref('/shared/test_ecriture').set({test:true}),false);
  await expect('Admin modifie seuil',admin.ref('/shared/thresholds/s005').set(5));
@@ -95,28 +98,34 @@ try{
  await expect('Utilisateur autorisé lit après attribution',outsider.ref('/shared').get());
  // Sauvegarde et restauration DANS L'ÉMULATEUR uniquement : aucune donnée de l'hôtel.
  const sharedBefore=(await admin.ref('/shared').get()).val();
+ const rolesBefore=(await admin.ref('/roles').get()).val();
  const archive=JSON.stringify({
    format:'velotte-v6-complete',
    project:'demo-velotte-v6-security',
    exportedAt:new Date().toISOString(),
-   shared:sharedBefore
+   shared:sharedBefore,
+   roles:rolesBefore
  });
  const readArchive=JSON.parse(archive);
  assert.equal(readArchive.format,'velotte-v6-complete');
  assert.equal(Object.keys(readArchive.shared.prices).length,78);
- await expect('Sauvegarde JSON complète et lisible',Promise.resolve(readArchive));
+ assert.equal(readArchive.roles[UID],'admin');
+ await expect('Sauvegarde JSON complète (données et rôles)',Promise.resolve(readArchive));
  await env.withSecurityRulesDisabled(async ctx=>{
    const db=ctx.database();
    await db.ref('/recovery_sandbox').set({placeholder:'données à restaurer'});
    await db.ref('/recovery_sandbox').remove();
-   await db.ref('/recovery_sandbox').set(readArchive.shared);
+   await db.ref('/recovery_sandbox').set({
+     shared:readArchive.shared,
+     roles:readArchive.roles
+   });
  });
  let recovered;
  await env.withSecurityRulesDisabled(async ctx=>{
    recovered=(await ctx.database().ref('/recovery_sandbox').get()).val();
  });
- assert.deepEqual(recovered,sharedBefore,'La restauration isolée doit restituer exactement les données sauvegardées.');
- await expect('Restauration de sauvegarde validée en environnement isolé',Promise.resolve(recovered));
+ assert.deepEqual(recovered,{shared:sharedBefore,roles:rolesBefore},'La restauration isolée doit restituer exactement les données et les rôles.');
+ await expect('Restauration JSON et rôles validée en environnement isolé',Promise.resolve(recovered));
  await env.withSecurityRulesDisabled(async ctx=>ctx.database().ref('/recovery_sandbox').remove());
  console.log('SUCCÈS',passed,'/',total,'tests Firebase officiels.');
 }catch(e){process.exitCode=1;console.error('ÉCHEC:',e?.stack||e);}finally{await env.cleanup();}
