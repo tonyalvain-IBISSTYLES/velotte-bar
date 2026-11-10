@@ -93,5 +93,29 @@ try{
  await expect('Admin ne peut donner un deuxième rôle admin',admin.ref('/roles/TEST_UNKNOWN').set('admin'),false);
  await expect('Admin peut donner un rôle réception',admin.ref('/roles/TEST_UNKNOWN').set('reception'));
  await expect('Utilisateur autorisé lit après attribution',outsider.ref('/shared').get());
+ // Sauvegarde et restauration DANS L'ÉMULATEUR uniquement : aucune donnée de l'hôtel.
+ const sharedBefore=(await admin.ref('/shared').get()).val();
+ const archive=JSON.stringify({
+   format:'velotte-v6-complete',
+   project:'demo-velotte-v6-security',
+   exportedAt:new Date().toISOString(),
+   shared:sharedBefore
+ });
+ const readArchive=JSON.parse(archive);
+ assert.equal(readArchive.format,'velotte-v6-complete');
+ assert.equal(Object.keys(readArchive.shared.prices).length,78);
+ await expect('Sauvegarde JSON complète et lisible',Promise.resolve(readArchive));
+ await env.withSecurityRulesDisabled(async ctx=>{
+   const db=ctx.database();
+   await db.ref('/recovery_sandbox').set({placeholder:'données à restaurer'});
+   await db.ref('/recovery_sandbox').remove();
+   await db.ref('/recovery_sandbox').set(readArchive.shared);
+ });
+ const recovered=await env.withSecurityRulesDisabled(async ctx=>
+   (await ctx.database().ref('/recovery_sandbox').get()).val()
+ );
+ assert.deepEqual(recovered,sharedBefore,'La restauration isolée doit restituer exactement les données sauvegardées.');
+ await expect('Restauration de sauvegarde validée en environnement isolé',Promise.resolve(recovered));
+ await env.withSecurityRulesDisabled(async ctx=>ctx.database().ref('/recovery_sandbox').remove());
  console.log('SUCCÈS',passed,'/',total,'tests Firebase officiels.');
 }catch(e){process.exitCode=1;console.error('ÉCHEC:',e?.stack||e);}finally{await env.cleanup();}
