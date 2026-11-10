@@ -1,6 +1,6 @@
 {
   "database": {
-    "rules": "firebase.rules.v6.hardening-draft.json"
+    "rules": "firebase.rules.v6.json"
   },
   "emulators": {
     "database": {
