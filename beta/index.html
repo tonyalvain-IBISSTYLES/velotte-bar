@@ -1264,7 +1264,7 @@ function home(){const m=today().slice(0,7),monthly=monthlySales(m),sum=salesSum(
 const last7=Array.from({length:7},(_,i)=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-(6-i));const day=[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');return [String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0'),salesSum(state.sales.filter(s=>s.date===day)).gross];});
 setTitle('Bienvenue au bar 👋','Votre espace pour suivre les boissons sans tableur compliqué.');
 return `<div class="hero"><div><div class="eyebrow">✨ Un meilleur réflexe, chaque jour</div><h2>Les boissons, suivies en quelques clics.</h2><p>On saisit les ventes, on compte les stocks une fois par semaine et on sait immédiatement quoi vérifier ou commander.</p><div class="actions" style="margin-top:20px"><button class="btn lime" data-go="ventes">+ Saisir une vente</button><button class="btn" style="background:#325c4c;color:#fff;border:1px solid #517b64" data-go="inventaire">Faire l’inventaire</button></div></div><div class="hero-right"><div class="round">🥤</div><strong>Simple pour toute l'équipe</strong></div></div>
-<div class="section-head"><div><h2>Votre activité dans cette application</h2><p>${h(m)} · Uniquement les données saisies sur ce navigateur</p></div>${badge('warn','Non synchronisé')}</div>
+<div class="section-head"><div><h2>Votre activité dans cette application</h2><p id="cloud-dashboard-description">${h(m)} · Données communes via Firebase</p></div><span id="cloud-home-status">${window.VelotteCloud?.ready?.() && window.VelotteCloud?.connected?.() ? badge('ok','✓ Données partagées') : badge('warn',window.VelotteCloud?.ready?.() ? '⚠ Hors connexion' : 'Chargement Firebase…')}</span></div>
 <div class="metrics">${iconMetric('BOISSONS SAISIES',nfmt(sum.units),'Ce mois-ci','🥤')}${iconMetric('CA TARIFÉ',eur(sum.gross),sum.unpriced?'Hors ventes à prix manquant':'Basé sur les prix du catalogue','💶')}${iconMetric('ALERTES DE STOCK',nfmt(alerts),'Anomalies ou seuils atteints','🚦')}${iconMetric('RÉFÉRENCES COMPTÉES',`${counts}/${STOCK_KEYS.length}`,'Au moins un inventaire saisi','📦')}</div>
 <div class="section-head"><div><h2>Que souhaitez-vous faire ?</h2><p>Des actions concrètes, sans menus compliqués</p></div></div>
 <div class="quick-grid"><button class="quick" data-go="ventes"><span class="qicon">🥤</span><strong>Enregistrer des ventes</strong><small>Choisissez les boissons, ajoutez les quantités, validez.</small></button><button class="quick" data-go="inventaire"><span class="qicon">📋</span><strong>Inventaire de la semaine</strong><small>Comptez les produits et saisissez le stock réel.</small></button><button class="quick" data-go="stocks"><span class="qicon">🚦</span><strong>Que faut-il commander ?</strong><small>Consultez les seuils et les quantités à prévoir.</small></button></div>
@@ -1554,6 +1554,18 @@ function refreshStatus(){
   const msg=cloudStatus();statusLine.textContent=msg;statusLine.title=auth.currentUser?.email||'';
   byId('save-status').textContent=msg;
   adminButton.hidden=currentRole!=='admin';
+  // Le tableau de bord doit refléter l'état réel de Firebase, pas l'ancien libellé local V5.
+  const dashBadge=byId('cloud-home-status')?.querySelector('.status');
+  const dashDescription=byId('cloud-dashboard-description');
+  const online=!!auth.currentUser && !!currentRole && loaded && connectedRealtime;
+  if(dashBadge){
+    dashBadge.className='status '+(online?'ok':'warn');
+    dashBadge.textContent=online?'✓ Données partagées':(!auth.currentUser?'Connexion requise':!loaded?'Chargement Firebase…':'⚠ Hors connexion');
+  }
+  if(dashDescription){
+    const month=new Date().toISOString().slice(0,7);
+    dashDescription.textContent=month+' · '+(online?'Ventes, inventaires et stocks communs via Firebase':!auth.currentUser?'Connectez-vous pour accéder aux données communes':!loaded?'Chargement des données partagées…':'Données chargées · connexion réseau interrompue');
+  }
 }
 function showGate(message){
   gate.classList.remove('hidden');
