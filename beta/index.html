@@ -1491,7 +1491,7 @@ document.addEventListener('change',e=>{
 let dirtyThresholds=new Set(),dirtyPrices=new Set();
 window.VelotteV6={
  stockKeys:STOCK_KEYS.map(x=>x.key),
- basePrices:Object.fromEntries(PRODUCTS.map(p=>[p.id,priced(p)])),
+ basePrices:Object.fromEntries(PRODUCTS.map(p=>[p.id,p.price!==null&&p.price!==undefined?Number(p.price):(p.stockKey==='Pelican pression'?PRODUCTS.find(h=>h.stockKey==='Heineken pression'&&h.format===p.format)?.price??null:null)])),
  applyRemote(raw){
    const stockCodes=STOCK_KEYS.map(x=>x.key);
    const codeToKey=code=>{const i=Number(String(code).slice(1));return /^s[0-9]{3}$/.test(String(code))?stockCodes[i]:undefined};
