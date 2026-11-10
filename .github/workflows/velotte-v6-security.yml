@@ -1,0 +1,38 @@
+name: Velotte V6 - tests de securite Firebase
+
+on:
+  push:
+    branches:
+      - audit-v6-fiabilisation
+    paths:
+      - 'beta/index.html'
+      - 'firebase.rules.v6.hardening-draft.json'
+      - 'firebase.audit.json'
+      - 'tests/**'
+      - '.github/workflows/velotte-v6-security.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  firebase-database-security:
+    name: Emulator Realtime Database - regles et donnees
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Telecharger la branche d'audit
+        uses: actions/checkout@v4
+      - name: Installer Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Installer Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Installer Firebase CLI et outils de tests
+        run: npm install --no-save --no-package-lock --legacy-peer-deps firebase-tools@14 @firebase/rules-unit-testing@4 firebase@11
+      - name: Tester les regles dans Firebase Emulator (aucune base reelle)
+        run: npx firebase emulators:exec --only database --project demo-velotte-v6-security --config firebase.audit.json "node tests/rules-v6.mjs"
