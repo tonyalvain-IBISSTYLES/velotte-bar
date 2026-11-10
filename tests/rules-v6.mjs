@@ -111,9 +111,10 @@ try{
    await db.ref('/recovery_sandbox').remove();
    await db.ref('/recovery_sandbox').set(readArchive.shared);
  });
- const recovered=await env.withSecurityRulesDisabled(async ctx=>
-   (await ctx.database().ref('/recovery_sandbox').get()).val()
- );
+ let recovered;
+ await env.withSecurityRulesDisabled(async ctx=>{
+   recovered=(await ctx.database().ref('/recovery_sandbox').get()).val();
+ });
  assert.deepEqual(recovered,sharedBefore,'La restauration isolée doit restituer exactement les données sauvegardées.');
  await expect('Restauration de sauvegarde validée en environnement isolé',Promise.resolve(recovered));
  await env.withSecurityRulesDisabled(async ctx=>ctx.database().ref('/recovery_sandbox').remove());
