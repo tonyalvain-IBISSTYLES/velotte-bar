@@ -7,7 +7,8 @@
         ".read": "auth != null && (auth.uid === $uid || auth.uid === 'WyMkt1Cvv7eJFFETAtCJ1NH8CfC3')",
         ".write": "auth != null && auth.uid === 'WyMkt1Cvv7eJFFETAtCJ1NH8CfC3'",
         ".validate": "newData.isString() && (newData.val() === 'responsable' || newData.val() === 'reception' || (newData.val() === 'admin' && $uid === 'WyMkt1Cvv7eJFFETAtCJ1NH8CfC3'))"
-      }
+      },
+      ".read": "auth != null && auth.uid === 'WyMkt1Cvv7eJFFETAtCJ1NH8CfC3'"
     },
     "shared": {
       ".read": "auth != null && (auth.uid === 'WyMkt1Cvv7eJFFETAtCJ1NH8CfC3' || root.child('roles').child(auth.uid).val() === 'admin' || root.child('roles').child(auth.uid).val() === 'responsable' || root.child('roles').child(auth.uid).val() === 'reception')",
