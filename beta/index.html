@@ -1244,8 +1244,9 @@ function saleTotal(s){return s.price==null?null:Number(s.price)*Number(s.qty)}
 function inMonth(s,m){return (s.date||'').startsWith(m)}
 function monthlySales(month){return state.sales.filter(s=>inMonth(s,month))}
 function salesSum(rows){let gross=0,units=0,unpriced=0;for(const s of rows){units+=s.qty;const t=saleTotal(s);if(t==null)unpriced+=s.qty;else gross+=t;}return {gross,units,unpriced};}
+function recordTime(x){return Number.isFinite(Number(x?.createdAtMs))&&Number(x.createdAtMs)>0?Number(x.createdAtMs):Date.parse(x?.createdAt||'')||0}
 function lastInventoryFor(key){let best=null;for(const x of state.inventories){if(!x.items||!Object.prototype.hasOwnProperty.call(x.items,key))continue;
- if(!best||x.date>best.date||(x.date===best.date&&x.createdAt>=best.createdAt))best=x;}return best;}
+ if(!best||x.date>best.date||(x.date===best.date&&recordTime(x)>=recordTime(best)))best=x;}return best;}
 function compatible(key){const group=PRODUCTS.filter(p=>p.stockKey===key);return group.every(p=>p.refUnit===p.stockUnit);}
 function stockInfo(key){const inv=lastInventoryFor(key),meta=STOCK_KEYS.find(x=>x.key===key),min=state.thresholds[key]??null;
  if(!inv)return {kind:'missing',inv:null,min,meta,remaining:null};
@@ -1310,7 +1311,7 @@ return `<div class="panel"><div class="controls" style="justify-content:space-be
 function guide(){setTitle('Le guide de l’équipe ✨','Tout comprendre en moins de trois minutes.');return `<div class="hero" style="min-height:190px"><div><div class="eyebrow">Mode d’emploi</div><h2>Simple. Visuel. Collectif aujourd’hui.</h2><p>Un geste à la fois. Suivez le petit rituel ci-dessous pour une gestion de bar plus fiable.</p></div><div class="hero-right"><div class="round">✨</div><strong>La méthode Velotte</strong></div></div><div class="section-head"><div><h2>Les 4 réflexes à adopter</h2><p>À afficher en réception ou à relire en cas de doute</p></div></div><div class="help-grid"><div class="help-card"><div class="hicon">🥤</div><h3>1. Je vends une boisson</h3><p>Je vais dans <b>Ventes</b>, je recherche la référence exacte (par exemple Coca-Cola Zéro et non Coca-Cola), je choisis la quantité, puis je clique sur Enregistrer. Je continue à utiliser OPERA Cloud comme aujourd’hui : <b>2701 pour les softs, 2702 pour les alcools</b>.</p></div><div class="help-card"><div class="hicon">📦</div><h3>2. Je fais l’inventaire chaque semaine</h3><p>Je vais dans <b>Inventaire</b>, je compte les produits du bar, puis je renseigne le stock réellement observé. Je peux laisser vide une référence non comptée. <b>0</b> signifie que j'ai vérifié et qu'il n'en reste plus.</p></div><div class="help-card"><div class="hicon">🚦</div><h3>3. Je prépare une commande</h3><p>Dans <b>Stocks</b>, je vérifie les alertes et les stocks minimums. Je contrôle physiquement les produits sensibles avant de commander. Je peux exporter une liste de besoins, puis enregistrer la livraison lorsqu’elle arrive.</p></div><div class="help-card"><div class="hicon">🍺</div><h3>4. Je gère la bière pression</h3><p>Les fûts Heineken et Pelican contiennent <b>8 L</b>. Un service de 25 cl déduit 0,25 L, 33 cl déduit 0,33 L et 50 cl déduit 0,50 L. Deux fûts reçus : mouvement de livraison de <b>+16 L</b>.</p></div><div class="help-card"><div class="hicon">📈</div><h3>5. Je consulte les chiffres</h3><p>Dans <b>Rapports</b>, je consulte le nombre d’unités vendues, le CA tarifé et les tops produits pour les saisies du site. Pour les chiffres financiers officiels, je m’appuie toujours sur les rapports OPERA.</p></div><div class="help-card"><div class="hicon">🔒</div><h3>6. Je protège les données</h3><p>Les ventes et les inventaires <b>validés</b> sont enregistrés dans Firebase et partagés avec les collègues autorisés. Les brouillons restent uniquement sur mon appareil. Dans <b>Réglages</b>, je télécharge régulièrement un export JSON indépendant et je le conserve dans un emplacement sécurisé.</p></div></div><div class="notice" style="margin-top:20px"><span>💡</span><div><b>Exemple concret :</b> un client commande 1 Coca-Cola Zéro et 2 Heineken 25 cl. J’ajoute 1 et 2 aux bonnes fiches, puis j’enregistre. Lorsqu’un inventaire de pression existe, les 2 Heineken retirent automatiquement 0,50 L. Les éventuelles erreurs de caisse se corrigent toujours également dans OPERA.</div></div><div class="actions" style="margin-top:20px"><button class="btn primary" data-go="ventes">Faire un essai de vente</button><button class="btn light" data-go="inventaire">Voir l’inventaire</button></div>`;}
 function settings(){setTitle('Réglages & sauvegardes ⚙️','Préparez un catalogue correct et protégez les saisies.');const missing=PRODUCTS.filter(p=>priced(p)===null),canEditPrices=window.VelotteCloud?.role?.()==='admin';return `<div class="notice red"><span>🔐</span><div><b>V6 BÊTA — Accès sécurisés et données partagées.</b> Les opérations validées sont enregistrées dans Firebase après connexion. Les brouillons restent locaux. Réalisez des exports JSON de sécurité et ne saisissez jamais de données personnelles des clients. Les tests ne remplacent pas une validation technique avant déploiement auprès de toute l’équipe.</div></div>
 <div class="two-col" style="margin-top:17px"><div class="panel"><h3>💾 Sauvegarde des données</h3><p class="sub">Les opérations confirmées sont sauvegardées sur Firebase. Les brouillons restent enregistrés uniquement dans ce navigateur. Exportez régulièrement le fichier JSON sur un support sécurisé hors du site : aucune sauvegarde administrée n’est incluse dans l’offre gratuite Spark.</p><div class="actions"><button class="btn primary" data-act="backup">Télécharger la sauvegarde JSON</button><span class="note-small">Restauration cloud volontairement désactivée pendant les tests.</span></div><p class="note-small" style="margin-top:14px">Export des ventes, inventaires, seuils, mouvements et tarifs connus par cet appareil. Les sauvegardes JSON doivent être stockées hors du navigateur.</p></div><div class="panel"><h3>🧾 Historique enregistré</h3><p class="sub">Données collectives actuellement synchronisées : ${state.sales.length} ligne(s) de vente, ${state.inventories.length} inventaire(s) et ${state.movements.length} mouvement(s) de stock.</p><div class="actions"><button class="btn soft" data-act="export-sales">Exporter les ventes CSV</button><button class="btn soft" data-act="export-inventories">Inventaires CSV</button></div><div class="divider"></div><span class="note-small">La suppression générale est désactivée en V6 pour éviter un effacement collectif accidentel.</span></div></div>
-<div class="section-head"><div><h2>Tarifs du catalogue</h2><p>Modifiez uniquement après validation ; les ventes déjà enregistrées gardent leur ancien prix.</p></div></div><div class="panel"><div class="notice blue" style="margin-bottom:15px"><span>📝</span><div>Les tarifs du catalogue proviennent du fichier Excel existant. Les prix Pelican sont alignés sur ceux de Heineken à contenance identique. Le CA tarifé exclut les ventes sans prix.</div></div><div class="table-wrap"><table class="list-table"><thead><tr><th>Produit</th><th>Code</th><th>Prix actuel (€)</th></tr></thead><tbody>${PRODUCTS.map(p=>`<tr><td><b>${h(p.name)}</b></td><td>${p.code}</td><td><input class="input tariff" type="number" min="0" step="0.01" data-tariff="${p.id}" placeholder="À confirmer" value="${priced(p)===null?'':priced(p)}" ${canEditPrices?'':'disabled'}/></td></tr>`).join('')}</tbody></table></div><div class="actions" style="margin-top:16px"><button class="btn primary" data-act="save-prices" ${canEditPrices?'':'disabled'}>Enregistrer les tarifs</button></div></div>`;}
+<div class="section-head"><div><h2>Tarifs du catalogue</h2><p>Modifiez uniquement après validation ; les ventes déjà enregistrées gardent leur ancien prix.</p></div></div><div class="notice blue"><span>🔒</span><div><b>Tarifs de référence Firebase :</b> les ventes seront refusées si le tarif officiel manque dans la base. ${canEditPrices?'Pour initialiser uniquement les tarifs absents, utilise le bouton ci-dessous après validation des 78 prix.':'La configuration des prix est réservée à l’administrateur.'}</div></div>${canEditPrices?'<div class="actions" style="margin:12px 0"><button class="btn primary" data-act="init-prices">Initialiser les tarifs manquants (administrateur)</button></div>':''}<div class="panel"><div class="notice blue" style="margin-bottom:15px"><span>📝</span><div>Les tarifs du catalogue proviennent du fichier Excel existant. Les prix Pelican sont alignés sur ceux de Heineken à contenance identique. Le CA tarifé exclut les ventes sans prix.</div></div><div class="table-wrap"><table class="list-table"><thead><tr><th>Produit</th><th>Code</th><th>Prix actuel (€)</th></tr></thead><tbody>${PRODUCTS.map(p=>`<tr><td><b>${h(p.name)}</b></td><td>${p.code}</td><td><input class="input tariff" type="number" min="0" step="0.01" data-tariff="${p.id}" placeholder="À confirmer" value="${priced(p)===null?'':priced(p)}" ${canEditPrices?'':'disabled'}/></td></tr>`).join('')}</tbody></table></div><div class="actions" style="margin-top:16px"><button class="btn primary" data-act="save-prices" ${canEditPrices?'':'disabled'}>Enregistrer les tarifs</button></div></div>`;}
 function render(){
  // Préserver le champ en cours lorsque Firebase actualise les chiffres en arrière-plan.
  const screen=document.getElementById('screen'), active=document.activeElement;
@@ -1338,8 +1339,8 @@ function validateDate(d){if(typeof d!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(d)|
  const [y,m,day]=d.split('-').map(Number),v=new Date(y,m-1,day);return v.getFullYear()===y&&v.getMonth()===m-1&&v.getDate()===day;}
 function validQty(q){return Number.isSafeInteger(Number(q))&&Number(q)>0&&Number(q)<=9999;}
 function validCount(key,n){const meta=STOCK_KEYS.find(x=>x.key===key);return !!meta&&Number.isFinite(n)&&n>=0&&n<=100000&&(meta.unit==='litre'||Number.isInteger(n));}
-function afterInventorySale(s,inv){return s.date>inv.date||(s.date===inv.date&&s.createdAt>inv.createdAt)}
-function afterInventoryMovement(m,inv){const d=m.date||m.createdAt?.slice(0,10)||'';return d>inv.date||(d===inv.date&&m.createdAt>inv.createdAt)}
+function afterInventorySale(s,inv){return s.date>inv.date||(s.date===inv.date&&recordTime(s)>recordTime(inv))}
+function afterInventoryMovement(m,inv){const d=m.date||m.createdAt?.slice(0,10)||'';return d>inv.date||(d===inv.date&&recordTime(m)>recordTime(inv))}
 let cloudSubmitting=false;
 async function cloudCall(action,payload,success){
  if(cloudSubmitting)return toast('Une opération est déjà en cours.');
@@ -1444,6 +1445,7 @@ document.addEventListener('click',e=>{
  case'export-inventories':exportInventories();break;
  case'export-order':exportOrder();break;
  case'backup':window.VelotteCloud?.exportBackup?.().then(()=>toast('✓ Copie de sécurité complète exportée. À conserver en lieu sûr.')).catch(e=>toast('⚠ Export impossible : '+String(e.message||e)));break;
+ case'init-prices':if(!window.VelotteCloud?.ready?.()||!window.VelotteCloud?.connected?.())return toast('Connexion Firebase requise.');if(!confirm('Initialiser uniquement les tarifs manquants dans Firebase, sans modifier les tarifs existants ?'))return;window.VelotteCloud.initializePrices().then(result=>{render();toast('✓ '+result+' tarifs ajoutés. Les tarifs existants sont conservés.');}).catch(e=>toast('⚠ Initialisation impossible : '+String(e.message||e)));break;
  case'restore':case'recover':case'reset':toast('Opération désactivée dans la version collaborative de test.');break;
  }
 });
@@ -1489,14 +1491,15 @@ document.addEventListener('change',e=>{
 let dirtyThresholds=new Set(),dirtyPrices=new Set();
 window.VelotteV6={
  stockKeys:STOCK_KEYS.map(x=>x.key),
+ basePrices:Object.fromEntries(PRODUCTS.map(p=>[p.id,priced(p)])),
  applyRemote(raw){
    const stockCodes=STOCK_KEYS.map(x=>x.key);
    const codeToKey=code=>{const i=Number(String(code).slice(1));return /^s[0-9]{3}$/.test(String(code))?stockCodes[i]:undefined};
    const values=obj=>Object.values(obj||{}).filter(x=>x&&typeof x==='object'&&!Array.isArray(x));
    const cancelled=new Set(Object.keys(raw.cancelledBatches||{}));
-   const sales=values(raw.sales).filter(x=>!cancelled.has(x.batch)).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt))||String(a.id).localeCompare(String(b.id)));
-   const inventories=values(raw.inventories).map(x=>({...x,items:Object.fromEntries(Object.entries(x.items||{}).map(([k,v])=>[codeToKey(k),v]).filter(([k])=>k))})).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt)));
-   const movements=values(raw.movements).map(x=>({...x,stockKey:codeToKey(x.stockId)})).filter(x=>x.stockKey).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt)));
+   const sales=values(raw.sales).filter(x=>!cancelled.has(x.batch)).sort((a,b)=>recordTime(a)-recordTime(b)||String(a.id).localeCompare(String(b.id)));
+   const inventories=values(raw.inventories).map(x=>({...x,items:Object.fromEntries(Object.entries(x.items||{}).map(([k,v])=>[codeToKey(k),v]).filter(([k])=>k))})).sort((a,b)=>recordTime(a)-recordTime(b));
+   const movements=values(raw.movements).map(x=>({...x,stockKey:codeToKey(x.stockId)})).filter(x=>x.stockKey).sort((a,b)=>recordTime(a)-recordTime(b));
    const thresholds=Object.fromEntries(Object.entries(raw.thresholds||{}).map(([k,v])=>[codeToKey(k),v]).filter(([k])=>k));
    const prices={...raw.prices};
    for(const key of dirtyThresholds){
@@ -1528,7 +1531,7 @@ render();saveStatus();
 // Les opérations sont conservées comme enregistrements append-only, sans réécriture globale.
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js';
-import { getDatabase, ref, onValue, get, set, update, remove } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js';
+import { getDatabase, ref, onValue, get, set, update, remove, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyDHyXfoMElo5aRnp7p23ar31GY7Ya_FAQU',
@@ -1627,30 +1630,53 @@ const cloudAPI = {
  async writeSales(lines){
    checkWrite();if(!Array.isArray(lines)||lines.length<1||lines.length>90)throw new Error('Lot invalide.');
    const changes={};for(const row of lines){if(!/^p\d{3}$/.test(row.productId)||!Number.isInteger(row.qty)||row.qty<1||row.qty>9999)throw new Error('Référence ou quantité invalide');
-      changes[row.id]={...row,by_uid:auth.currentUser.uid};}
+      if(row.price==null)throw new Error('Tarif non initialisé pour '+row.productId+'. Initialiser les prix dans Réglages.');
+      changes[row.id]={...row,createdAtMs:serverTimestamp(),by_uid:auth.currentUser.uid};}
    await update(ref(db,'shared/sales'),changes);
  },
  async cancelBatch({batch,reason}){
    checkWrite('responsable');if(typeof batch!=='string'||!/^id_[A-Za-z0-9_]+$/.test(batch))throw new Error('Lot invalide');
    const r=ref(db,'shared/cancelledBatches/'+batch);const snapshot=await get(r);
    if(snapshot.exists())throw new Error('Ce lot est déjà annulé.');
-   await set(r,{by_uid:auth.currentUser.uid,createdAt:new Date().toISOString(),reason:String(reason||'Annulation').slice(0,100)});
+   await set(r,{by_uid:auth.currentUser.uid,createdAt:new Date().toISOString(),createdAtMs:serverTimestamp(),reason:String(reason||'Annulation').slice(0,100)});
  },
  async writeInventory(row){
    checkWrite();const items={};for(const [key,qty] of Object.entries(row.items||{})){if(!Number.isFinite(qty)||qty<0)throw new Error('Quantité inventaire invalide');items[stockCode(key)]=qty;}
    if(!Object.keys(items).length)throw new Error('Inventaire vide');
-   await set(ref(db,'shared/inventories/'+row.id),{id:row.id,items,date:row.date,createdAt:row.createdAt,note:row.note||'',by_uid:auth.currentUser.uid});
+   await set(ref(db,'shared/inventories/'+row.id),{id:row.id,items,date:row.date,createdAt:row.createdAt,createdAtMs:serverTimestamp(),note:row.note||'',by_uid:auth.currentUser.uid});
  },
  async writeMovement(row){
    checkWrite('responsable');if(!Number.isFinite(row.qty)||!row.qty)throw new Error('Quantité mouvement invalide');
-   await set(ref(db,'shared/movements/'+row.id),{id:row.id,stockId:stockCode(row.stockKey),qty:row.qty,reason:row.reason,date:row.date,createdAt:row.createdAt,by_uid:auth.currentUser.uid});
+   await set(ref(db,'shared/movements/'+row.id),{id:row.id,stockId:stockCode(row.stockKey),qty:row.qty,reason:row.reason,date:row.date,createdAt:row.createdAt,createdAtMs:serverTimestamp(),by_uid:auth.currentUser.uid});
  },
  async writeThresholds(changes){
    checkWrite('responsable');const payload={};for(const [key,num] of Object.entries(changes||{})){if(num!==null&&(!Number.isFinite(num)||num<0))throw new Error('Seuil incorrect');payload[stockCode(key)]=num;}
    if(!Object.keys(payload).length)throw new Error('Aucune modification');await update(ref(db,'shared/thresholds'),payload);
  },
+ async initializePrices(){
+   checkWrite('admin');
+   const canonical=window.VelotteV6?.basePrices||{};
+   if(Object.keys(canonical).length!==78)throw new Error('Catalogue incomplet');
+   const snap=await get(ref(db,'shared/prices')), existing=snap.val()||{};
+   const delta={};
+   for(const [id,price] of Object.entries(canonical)){
+     if(Object.prototype.hasOwnProperty.call(existing,id))continue;
+     if(!Number.isFinite(price)||price<0||price>10000)throw new Error('Tarif incorrect '+id);
+     delta[id]=price;
+   }
+   // Respecter aussi un éventuel prix Heineken déjà modifié dans Firebase.
+   for(const [hk,pel] of [['p033','p036'],['p034','p037'],['p035','p038']]){
+     if(Object.prototype.hasOwnProperty.call(delta,pel) && Object.prototype.hasOwnProperty.call(existing,hk))delta[pel]=Number(existing[hk]);
+     if(Object.prototype.hasOwnProperty.call(delta,hk) && Object.prototype.hasOwnProperty.call(existing,pel))delta[hk]=Number(existing[pel]);
+     const hkPrice=Object.prototype.hasOwnProperty.call(delta,hk)?delta[hk]:existing[hk];
+     const pelPrice=Object.prototype.hasOwnProperty.call(delta,pel)?delta[pel]:existing[pel];
+     if(hkPrice!=null && pelPrice!=null && hkPrice!==pelPrice)throw new Error('Tarifs Pelican et Heineken différents dans Firebase, correction manuelle nécessaire avant initialisation.');
+   }
+   if(Object.keys(delta).length)await update(ref(db,'shared/prices'),delta);
+   return Object.keys(delta).length;
+ },
  async writePrices(changes){
-   checkWrite('admin');const payload={};for(const [id,num] of Object.entries(changes||{})){if(!/^p\d{3}$/.test(id)||num!==null&&(!Number.isFinite(num)||num<0||num>10000))throw new Error('Tarif incorrect');payload[id]=num;}
+   checkWrite('admin');const payload={};for(const [id,num] of Object.entries(changes||{})){if(!/^p\d{3}$/.test(id)||!Number.isFinite(num)||num<0||num>10000)throw new Error('Tarif incorrect');payload[id]=num;}
    if(!Object.keys(payload).length)throw new Error('Aucune modification');await update(ref(db,'shared/prices'),payload);
  }
 };
