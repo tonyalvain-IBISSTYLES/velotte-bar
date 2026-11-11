@@ -30,7 +30,7 @@ import vm from 'node:vm';
   today:()=> '2026-11-11',h:x=>String(x),eur:n=>`${n} €`,priced:p=>p.price,productEmoji:()=> '🥤',
   typeMatches:()=>true,saleSection:p=>p.group==='Soft'?'Softs':'Pression',saleSectionMeta:()=>({icon:'🥤',desc:'Boissons'}),
   productRowHTML:p=>`<article>${p.name}</article>`,salesOverviewHTML:()=>'',kegShowcaseHTML:()=>'',validCount:(k,n)=>Number.isFinite(n)&&n>=0,stockInfo:()=>({remaining:4,meta:{unit:'unité'}}),
-  nfmt:n=>String(n),saleTotal:s=>s.qty*s.price,validateDate:()=>true,validQty:n=>Number.isInteger(Number(n))&&Number(n)>0,uid:(()=>{let i=0;return ()=>`id_unique_${++i}`})(),
+  nfmt:n=>String(n),stockNumber:raw=>Number(String(raw).replace(',','.')),saleTotal:s=>s.qty*s.price,validateDate:()=>true,validQty:n=>Number.isInteger(Number(n))&&Number(n)>0,uid:(()=>{let i=0;return ()=>`id_unique_${++i}`})(),
   toStamp:()=> '2026-11-11T10:00:00Z',saveDraft:()=>{},toast:()=>{},cloudSubmitting:false,
   sales:()=>'<div>base</div>',inventory:()=>'<div class="field" style="margin-top:17px"><label for="inventory-note">',home:()=>'<div>home</div>',
   guide:()=>'<div>guide</div>',reports:()=>'<div>reports</div>',productsHTML:()=>'<div>old</div>',render:()=>{},checkout:()=>{},currentDraft:()=>({}),
@@ -57,6 +57,30 @@ import vm from 'node:vm';
  assert.equal(stockValidator('martini',0.333),false,'au-delà de 2 décimales, refuser');
  assert.equal(stockValidator('martini',-0.5),false,'stock négatif interdit');
  assert.equal(stockValidator('coca',1.4),false,'les unités restent entières');
+ // Contrôler la vraie fonction visuelle, sans navigateur ni accès à Firebase.
+ const bottleStart=html.indexOf('function bottleVisual('),bottleEnd=html.indexOf('\\nfunction afterInventorySale(',bottleStart);
+ assert(bottleStart>0&&bottleEnd>bottleStart,'mini-bouteille non déclarée');
+ const bottleRenderer=vm.runInNewContext('('+html.slice(bottleStart,bottleEnd)+')',
+  {STOCK_KEYS:ctx.STOCK_KEYS,validCount:stockValidator,h:x=>String(x)},{timeout:2500});
+ const half=bottleRenderer('martini',0.5,'stock');
+ assert.equal((half.match(/class="ux-bottle"/g)||[]).length,1,'0,5 = une bouteille visuelle');
+ assert(half.includes('height:50%')&&half.includes('Une'), '0,5 doit afficher 50 %');
+ const oneFour=bottleRenderer('martini',1.4,'stock');
+ assert.equal((oneFour.match(/class="ux-bottle"/g)||[]).length,2,'1,4 = une pleine et une entamée');
+ assert(oneFour.includes('height:100%')&&oneFour.includes('height:40%'), '1,4 = 100 % + 40 %');
+ const twoEight=bottleRenderer('martini',2.8,'stock');
+ assert.equal((twoEight.match(/class="ux-bottle"/g)||[]).length,1,'à partir de deux bouteilles, rester compact');
+ assert(twoEight.includes('×2')&&twoEight.includes('height:80%'),'2,8 = 2 pleines + 80 %');
+ assert(bottleRenderer('martini',0,'last').includes('height:0%'),'zéro reste une bouteille vide');
+ assert.equal(bottleRenderer('martini',null,'stock'),'','stock inconnu : aucune jauge');
+ assert.equal(bottleRenderer('martini',-1,'stock'),'','stock invalide : aucune jauge');
+ assert.equal(bottleRenderer('coca',1,'stock'),'','pas de jauge pour les softs à l’unité');
+ assert(html.includes("bottleVisual(x.key,i.remaining,'stock')"),'jauge sur écran Stocks manquante');
+ assert(html.includes("bottleVisual(x.key,i.inv.items[x.key],'last')"),'jauge dernier comptage manquante');
+ assert(html.includes('data-ux-bottle-draft'),'aperçu de saisie inventaire manquant');
+ assert(ux.includes('preview.innerHTML=')&&css.includes('.ux-bottle-liquid')&&css.includes('@media(max-width:600px)'),'aperçu en temps réel ou style mobile absent');
+ ctx.bottleVisual=bottleRenderer;
+
 
  assert(ctx.productsHTML().includes('Coca-Cola sans sucre'),'alias zéro non reconnu');
  ctx.saleQuery='';assert(ctx.productsHTML().includes('Vente express'),'favoris non affichés');
