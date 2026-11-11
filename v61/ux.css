@@ -30,3 +30,5 @@ body[data-ux-role="reception"] [data-act="toggle-movement"],body[data-ux-role="r
 body[data-ux-page="accueil"][data-ux-role="reception"] #screen>.metrics,body[data-ux-page="accueil"][data-ux-role="reception"] #screen>.two-col{display:none!important}
 @media(max-width:780px){.ux-fast-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ux-reconcile-fields{grid-template-columns:1fr}.ux-inv-list{grid-template-columns:1fr}}
 @media(max-width:390px){.ux-fast-grid{gap:7px}.ux-fast-item{padding:9px;min-height:110px}}
+
+body.ux-submitting #product-results button,body.ux-submitting #product-results input,body.ux-submitting [data-act="checkout"]{pointer-events:none;opacity:.57}
