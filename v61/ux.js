@@ -22,7 +22,6 @@ const topProducts=()=>{
  const boundary=new Date();boundary.setDate(boundary.getDate()-30);
  const counts=new Map();
  for(const sale of state.sales){
-  if(!PRODUCT_BY_ID[sale.productId]||!sale.date||sale.date<today().slice(0,7)+'-00'){} // No-op : seules les dates réelles comptent.
   if(!sale.date||new Date(sale.date+'T12:00:00')<boundary)continue;
   counts.set(sale.productId,(counts.get(sale.productId)||0)+Number(sale.qty||0));
  }
@@ -112,16 +111,20 @@ checkout=async function(){
  const entries=Object.entries(cart).filter(([id,n])=>Number(n)>0).sort(([a],[b])=>a.localeCompare(b));
  if(!entries.length||!validateDate(saleDate)||!entries.every(([id,n])=>PRODUCT_BY_ID[id]&&validQty(n)))return originalCheckout();
  const signature=JSON.stringify([saleDate,entries.map(([id,n])=>[id,Number(n),priced(PRODUCT_BY_ID[id])])]);
- if(!uxPending||uxPending.signature!==signature||!Array.isArray(uxPending.lines)){
+ const expected=entries.map(([productId,qty])=>({productId,qty:Number(qty),price:priced(PRODUCT_BY_ID[productId])}));
+ const reliable=uxPending&&uxPending.signature===signature&&Array.isArray(uxPending.lines)&&uxPending.lines.length===expected.length&&uxPending.lines.every((row,i)=>row&&row.productId===expected[i].productId&&row.qty===expected[i].qty&&row.price===expected[i].price&&/^id_[A-Za-z0-9_]+$/.test(row.id)&&/^id_[A-Za-z0-9_]+$/.test(row.batch));
+ if(!reliable){
   const stamp=toStamp(),batch=uid();
   uxPending={signature,lines:entries.map(([productId,qty])=>({id:uid(),batch,date:saleDate,productId,qty:Number(qty),price:priced(PRODUCT_BY_ID[productId]),createdAt:stamp}))};
   saveDraft();
  }
  const buttons=[...document.querySelectorAll('[data-act="checkout"]')];
+ document.body.classList.add('ux-submitting');
  buttons.forEach(b=>{b.disabled=true;b.textContent='Synchronisation…';});
  try{
   await cloudCall('writeSales',uxPending.lines,()=>{cart={};uxPending=null;saveDraft();});
  }finally{
+  document.body.classList.remove('ux-submitting');
   document.querySelectorAll('[data-act="checkout"]').forEach(b=>{b.disabled=false;b.textContent='Enregistrer ✓';});
  }
 };
@@ -170,5 +173,14 @@ document.addEventListener('input',e=>{
   const el=document.getElementById('ux-compare-result');if(el)el.innerHTML=compareHTML();
  }
 });
-window.VelotteUX={version:'6.1',refresh:()=>render()};
+window.VelotteUX={
+ version:'6.1',refresh:()=>render(),
+ accountSwitch(uid){
+  // Un même compte conserve son brouillon à la réouverture; un changement de compte le détruit.
+  const key='velotte_v61_last_uid';let former=null;
+  try{former=localStorage.getItem(key)}catch(_){former=null}
+  if(!uid||uid!==former){uxPending=null;window.VelotteV6?.clearRemote();}
+  try{if(uid)localStorage.setItem(key,uid);else localStorage.removeItem(key)}catch(_){/* Stockage local inaccessible : aucune donnée partagée n'est écrite ici */}
+ }
+};
 })();
