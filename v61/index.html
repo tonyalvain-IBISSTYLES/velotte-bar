@@ -1341,6 +1341,7 @@ function validateDate(d){if(typeof d!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(d)|
  const [y,m,day]=d.split('-').map(Number),v=new Date(y,m-1,day);return v.getFullYear()===y&&v.getMonth()===m-1&&v.getDate()===day;}
 function validQty(q){return Number.isSafeInteger(Number(q))&&Number(q)>0&&Number(q)<=9999;}
 function validCount(key,n){const meta=STOCK_KEYS.find(x=>x.key===key);return !!meta&&Number.isFinite(n)&&n>=0&&n<=100000&&(meta.unit==='litre'||(meta.unit==='bouteille'&&Math.abs(n*100-Math.round(n*100))<1e-7)||Number.isInteger(n));}
+function stockNumber(raw){return Number(String(raw).trim().replace(',','.'));}
 function afterInventorySale(s,inv){return s.date>inv.date||(s.date===inv.date&&recordTime(s)>recordTime(inv))}
 function afterInventoryMovement(m,inv){const d=m.date||m.createdAt?.slice(0,10)||'';return d>inv.date||(d===inv.date&&recordTime(m)>recordTime(inv))}
 let cloudSubmitting=false;
@@ -1370,20 +1371,20 @@ async function undo(){
 }
 async function saveInventory(){
  if(!validateDate(invDate))return toast('Choisissez une date valide.');
- const items={};for(const [key,value] of Object.entries(invDraft)){if(!KNOWN_KEYS.has(key)||value==='')continue;const n=Number(value);if(!validCount(key,n))return toast('Comptage invalide.');items[key]=n}
+ const items={};for(const [key,value] of Object.entries(invDraft)){if(!KNOWN_KEYS.has(key)||value==='')continue;const n=stockNumber(value);if(!validCount(key,n))return toast('Comptage invalide.');items[key]=n}
  if(!Object.keys(items).length)return toast('Renseignez au moins une référence.');
  if(!confirm(`Enregistrer ${Object.keys(items).length} référence(s) comptée(s) le ${invDate} ?`))return;
  await cloudCall('writeInventory',{id:uid(),date:invDate,createdAt:toStamp(),items,note:invNote.trim().slice(0,200)},()=>{invDraft={};invNote='';saveDraft()});
 }
 async function saveMovement(){
- const key=document.getElementById('mov-key')?.value,type=document.getElementById('mov-type')?.value,raw=document.getElementById('mov-qty')?.value,qty=Number(raw);
+ const key=document.getElementById('mov-key')?.value,type=document.getElementById('mov-type')?.value,raw=document.getElementById('mov-qty')?.value,qty=stockNumber(raw);
  if(!KNOWN_KEYS.has(key)||!['Livraison','Casse','Offert','Correction +','Correction -'].includes(type)||raw===''||!validCount(key,qty)||qty===0)return toast('Mouvement invalide.');
  if(!lastInventoryFor(key))return toast('Effectuez d’abord un comptage pour cette référence.');
  const val=['Livraison','Correction +'].includes(type)?qty:-qty;
  await cloudCall('writeMovement',{id:uid(),stockKey:key,reason:type,qty:val,date:today(),createdAt:toStamp()},()=>{moveDraft={key,type,qty:''};saveDraft()});
 }
 async function saveThresholds(){
- const out={};for(const el of document.querySelectorAll('.threshold')){const key=el.dataset.threshold,value=el.value.trim();if(!KNOWN_KEYS.has(key))continue;if(value===''){out[key]=null;continue}const n=Number(value);if(!validCount(key,n))return toast('Seuil invalide.');out[key]=n}
+ const out={};for(const el of document.querySelectorAll('.threshold')){const key=el.dataset.threshold,value=el.value.trim();if(!KNOWN_KEYS.has(key))continue;if(value===''){out[key]=null;continue}const n=stockNumber(value);if(!validCount(key,n))return toast('Seuil invalide.');out[key]=n}
  const changed=Object.fromEntries(Object.entries(out).filter(([key])=>dirtyThresholds.has(key)));if(!Object.keys(changed).length)return toast('Aucun seuil modifié.');await cloudCall('writeThresholds',changed,()=>dirtyThresholds.clear());
 }
 async function savePrices(){
@@ -1410,7 +1411,7 @@ function isValidDraft(d){
  if(!d||typeof d!=='object'||Array.isArray(d))return false;
  const isRecord=v=>v&&typeof v==='object'&&!Array.isArray(v);
  if(d.cart!==undefined&&(!isRecord(d.cart)||Object.keys(d.cart).length>PRODUCTS.length||!Object.entries(d.cart).every(([id,q])=>PRODUCT_BY_ID[id]&&Number.isSafeInteger(q)&&q>=0&&q<=9999)))return false;
- if(d.invDraft!==undefined&&(!isRecord(d.invDraft)||Object.keys(d.invDraft).length>STOCK_KEYS.length||!Object.entries(d.invDraft).every(([key,q])=>KNOWN_KEYS.has(key)&&(q===''||(typeof q==='string'&&validCount(key,Number(q)))))))return false;
+ if(d.invDraft!==undefined&&(!isRecord(d.invDraft)||Object.keys(d.invDraft).length>STOCK_KEYS.length||!Object.entries(d.invDraft).every(([key,q])=>KNOWN_KEYS.has(key)&&(q===''||(typeof q==='string'&&validCount(key,stockNumber(q)))))))return false;
  if(d.moveDraft!==undefined&&(!isRecord(d.moveDraft)||d.moveDraft.key!==undefined&&!KNOWN_KEYS.has(d.moveDraft.key)||d.moveDraft.qty!==undefined&&(typeof d.moveDraft.qty!=='string'||d.moveDraft.qty.length>24)))return false;
  for(const k of ['saleQuery','stockQuery','invQuery','invNote'])if(d[k]!==undefined&&(typeof d[k]!=='string'||d[k].length>2000))return false;
  for(const k of ['saleDate','invDate'])if(d[k]!==undefined&&!validateDate(d[k]))return false;
