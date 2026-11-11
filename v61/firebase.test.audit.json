@@ -1,6 +1,6 @@
 {
   "database": {
-    "rules": "v61/firebase.rules.test.json"
+    "rules": "firebase.rules.test.json"
   },
   "emulators": {
     "database": {
