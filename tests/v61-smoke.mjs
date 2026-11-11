@@ -42,6 +42,15 @@ import vm from 'node:vm';
   csvExport:()=>{},navigator:{},localStorage:{getItem:()=>null,setItem:()=>{},removeItem:()=>{}}
  };
  vm.runInNewContext(ux,ctx,{timeout:2500});
+ assert(html.includes("meta.unit==='bouteille'") && html.includes("x.unit==='litre'||x.unit==='bouteille'"),'gestion bouteille entamée absente dans V6.1');
+ ctx.STOCK_KEYS.push({key:'martini',unit:'bouteille',name:'Martini Rouge'});
+ assert.equal(ctx.validCount('martini',1.4),true,'1,4 bouteille doit être accepté');
+ assert.equal(ctx.validCount('martini',0.5),true,'une demi-bouteille doit être acceptée');
+ assert.equal(ctx.validCount('martini',0.25),true,'un quart de bouteille doit être accepté');
+ assert.equal(ctx.validCount('martini',0.333),false,'au-delà de 2 décimales, refuser');
+ assert.equal(ctx.validCount('martini',-0.5),false,'stock négatif interdit');
+ assert.equal(ctx.validCount('coca',1.4),false,'les unités restent entières');
+
  assert(ctx.productsHTML().includes('Coca-Cola sans sucre'),'alias zéro non reconnu');
  ctx.saleQuery='';assert(ctx.productsHTML().includes('Vente express'),'favoris non affichés');
  ctx.invDraft.coca='1';assert(ctx.inventory().includes('Contrôle avant validation'));
@@ -50,5 +59,5 @@ import vm from 'node:vm';
  ctx.page='ventes';ctx.cart.p001=1;
  await ctx.checkout();await ctx.checkout();
  assert.equal(ctx.calls.length,2);assert.equal(ctx.calls[0][0].id,ctx.calls[1][0].id,'une vente incertaine doit garder le même ID');
- console.log('V6.1 : syntaxe HTML/JS + 7 scénarios de recette réussis (sans accès à Firebase réel)');
+ console.log('V6.1 : syntaxe HTML/JS + contrôles UX, bouteille fractionnaire, saisie et rôles (Firebase simulé)');
 })().catch(err=>{console.error(err);process.exit(1)});
