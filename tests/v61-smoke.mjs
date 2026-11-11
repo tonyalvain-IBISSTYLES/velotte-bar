@@ -58,7 +58,7 @@ import vm from 'node:vm';
  assert.equal(stockValidator('martini',-0.5),false,'stock négatif interdit');
  assert.equal(stockValidator('coca',1.4),false,'les unités restent entières');
  // Contrôler la vraie fonction visuelle, sans navigateur ni accès à Firebase.
- const bottleStart=html.indexOf('function bottleVisual('),bottleEnd=html.indexOf('\\nfunction afterInventorySale(',bottleStart);
+ const bottleStart=html.indexOf('function bottleVisual('),bottleEnd=html.indexOf('\nfunction afterInventorySale(',bottleStart);
  assert(bottleStart>0&&bottleEnd>bottleStart,'mini-bouteille non déclarée');
  const bottleRenderer=vm.runInNewContext('('+html.slice(bottleStart,bottleEnd)+')',
   {STOCK_KEYS:ctx.STOCK_KEYS,validCount:stockValidator,h:x=>String(x)},{timeout:2500});
