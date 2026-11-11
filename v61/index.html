@@ -1657,7 +1657,19 @@ const cloudAPI = {
    const changes={};for(const row of lines){if(!/^p\d{3}$/.test(row.productId)||!Number.isInteger(row.qty)||row.qty<1||row.qty>9999)throw new Error('Référence ou quantité invalide');
       if(row.price==null)throw new Error('Tarif non initialisé pour '+row.productId+'. Initialiser les prix dans Réglages.');
       changes[row.id]={...row,createdAtMs:serverTimestamp(),by_uid:auth.currentUser.uid};}
-   await update(ref(db,'shared/sales'),changes);
+   try {await update(ref(db,'shared/sales'),changes);}
+   catch (err){
+     // En cas d'accusé de réception perdu, vérifier chaque ID stable.
+     let confirmed=false;
+     try{
+       const snaps=await Promise.all(lines.map(row=>get(ref(db,'shared/sales/'+row.id))));
+       confirmed=snaps.every((snap,i)=>{
+         const got=snap.val(),row=lines[i];
+         return !!got&&got.id===row.id&&got.batch===row.batch&&got.productId===row.productId&&got.qty===row.qty&&got.price===row.price&&got.by_uid===auth.currentUser?.uid;
+       });
+     }catch(_){/* Réseau indisponible : aucune confirmation inventée. */}
+     if(!confirmed)throw err;
+   }
  },
  async cancelBatch({batch,reason}){
    checkWrite('responsable');if(typeof batch!=='string'||!/^id_[A-Za-z0-9_]+$/.test(batch))throw new Error('Lot invalide');
@@ -1747,7 +1759,7 @@ function subscribeRole(user,epoch){
 onAuthStateChanged(auth,async user=>{
  const epoch=++authEpoch;
  cleanSubscriptions();
- window.VelotteV6?.clearRemote();
+ window.VelotteUX?.accountSwitch?.(user?.uid);
  if(!user){showGate('Saisissez vos identifiants Firebase.');return;}
  showGate('Vérification des autorisations en cours…');
  offConnected=onValue(ref(db,'.info/connected'),snap=>{
