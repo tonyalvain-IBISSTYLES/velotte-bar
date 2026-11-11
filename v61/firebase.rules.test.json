@@ -1,0 +1,153 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "roles": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('roles').child(auth.uid).val() === 'admin')",
+        ".write": "auth != null && root.child('roles').child(auth.uid).val() === 'admin' && (data.val() !== 'admin' || newData.val() === 'admin')",
+        ".validate": "newData.isString() && (newData.val() === 'reception' || newData.val() === 'responsable' || (newData.val() === 'admin' && data.val() === 'admin'))"
+      },
+      ".read": "auth != null && root.child('roles').child(auth.uid).val() === 'admin'"
+    },
+    "shared": {
+      ".read": "auth != null && (root.child('roles').child(auth.uid).val() === 'admin' || root.child('roles').child(auth.uid).val() === 'responsable' || root.child('roles').child(auth.uid).val() === 'reception')",
+      ".write": false,
+      "sales": {
+        "$saleId": {
+          ".write": "auth != null && (root.child('roles').child(auth.uid).val() === 'admin' || root.child('roles').child(auth.uid).val() === 'responsable' || root.child('roles').child(auth.uid).val() === 'reception') && !data.exists() && newData.exists()",
+          ".validate": "newData.hasChildren(['id','batch','date','productId','qty','price','createdAt','createdAtMs','by_uid']) && newData.child('id').val() === $saleId && $saleId.matches(/^id_[a-z0-9_]{6,65}$/) && newData.child('by_uid').val() === auth.uid && newData.child('date').isString() && newData.child('date').val().matches(/^(20[2-9][0-9])-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/) && newData.child('createdAt').isString() && newData.child('createdAt').val().length >= 20 && newData.child('createdAt').val().length <= 40 && newData.child('createdAtMs').isNumber() && newData.child('createdAtMs').val() === now && newData.child('batch').isString() && newData.child('batch').val().matches(/^id_[a-z0-9_]{6,65}$/) && newData.child('productId').isString() && newData.child('productId').val().matches(/^p(00[1-9]|0[1-6][0-9]|07[0-8])$/) && newData.child('qty').isNumber() && newData.child('qty').val() >= 1 && newData.child('qty').val() <= 9999 && newData.child('qty').val() % 1 === 0 && newData.child('price').isNumber() && root.child('shared/prices').child(newData.child('productId').val()).isNumber() && newData.child('price').val() === root.child('shared/prices').child(newData.child('productId').val()).val()",
+          "id": {
+            ".validate": true
+          },
+          "batch": {
+            ".validate": true
+          },
+          "date": {
+            ".validate": true
+          },
+          "productId": {
+            ".validate": true
+          },
+          "qty": {
+            ".validate": true
+          },
+          "price": {
+            ".validate": true
+          },
+          "createdAt": {
+            ".validate": true
+          },
+          "createdAtMs": {
+            ".validate": true
+          },
+          "by_uid": {
+            ".validate": true
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "inventories": {
+        "$inventoryId": {
+          ".write": "auth != null && (root.child('roles').child(auth.uid).val() === 'admin' || root.child('roles').child(auth.uid).val() === 'responsable' || root.child('roles').child(auth.uid).val() === 'reception') && !data.exists() && newData.exists()",
+          ".validate": "newData.hasChildren(['id','date','createdAt','createdAtMs','items','by_uid']) && newData.child('id').val() === $inventoryId && $inventoryId.matches(/^id_[a-z0-9_]{6,65}$/) && newData.child('by_uid').val() === auth.uid && newData.child('date').isString() && newData.child('date').val().matches(/^(20[2-9][0-9])-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/) && newData.child('createdAt').isString() && newData.child('createdAt').val().length >= 20 && newData.child('createdAt').val().length <= 40 && newData.child('createdAtMs').isNumber() && newData.child('createdAtMs').val() === now && newData.child('items').hasChildren() && (!newData.child('note').exists() || (newData.child('note').isString() && newData.child('note').val().length <= 200))",
+          "items": {
+            "$stockId": {
+              ".validate": "$stockId.matches(/^s(00[0-9]|0[1-6][0-9]|07[0-3])$/) && newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000 && ($stockId === 's032' || $stockId === 's033' || newData.val() % 1 === 0)"
+            }
+          },
+          "id": {
+            ".validate": true
+          },
+          "date": {
+            ".validate": true
+          },
+          "createdAt": {
+            ".validate": true
+          },
+          "createdAtMs": {
+            ".validate": true
+          },
+          "by_uid": {
+            ".validate": true
+          },
+          "note": {
+            ".validate": true
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "movements": {
+        "$movementId": {
+          ".write": "auth != null && (root.child('roles').child(auth.uid).val() === 'admin' || root.child('roles').child(auth.uid).val() === 'responsable') && !data.exists() && newData.exists()",
+          ".validate": "newData.hasChildren(['id','stockId','qty','reason','date','createdAt','createdAtMs','by_uid']) && newData.child('id').val() === $movementId && $movementId.matches(/^id_[a-z0-9_]{6,65}$/) && newData.child('by_uid').val() === auth.uid && newData.child('date').isString() && newData.child('date').val().matches(/^(20[2-9][0-9])-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/) && newData.child('createdAt').isString() && newData.child('createdAt').val().length >= 20 && newData.child('createdAt').val().length <= 40 && newData.child('createdAtMs').isNumber() && newData.child('createdAtMs').val() === now && newData.child('stockId').isString() && newData.child('stockId').val().matches(/^s(00[0-9]|0[1-6][0-9]|07[0-3])$/) && newData.child('qty').isNumber() && newData.child('qty').val() >= -100000 && newData.child('qty').val() <= 100000 && newData.child('qty').val() != 0 && (newData.child('stockId').val() === 's032' || newData.child('stockId').val() === 's033' || newData.child('qty').val() % 1 === 0) && newData.child('reason').isString() && newData.child('reason').val().length >= 2 && newData.child('reason').val().length <= 100",
+          "id": {
+            ".validate": true
+          },
+          "stockId": {
+            ".validate": true
+          },
+          "qty": {
+            ".validate": true
+          },
+          "reason": {
+            ".validate": true
+          },
+          "date": {
+            ".validate": true
+          },
+          "createdAt": {
+            ".validate": true
+          },
+          "createdAtMs": {
+            ".validate": true
+          },
+          "by_uid": {
+            ".validate": true
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "cancelledBatches": {
+        "$batchId": {
+          ".write": "auth != null && (root.child('roles').child(auth.uid).val() === 'admin' || root.child('roles').child(auth.uid).val() === 'responsable') && !data.exists() && newData.exists() && $batchId.matches(/^id_[a-z0-9_]{6,65}$/)",
+          ".validate": "newData.hasChildren(['by_uid','createdAt','createdAtMs','reason']) && newData.child('by_uid').val() === auth.uid && newData.child('createdAt').isString() && newData.child('createdAt').val().length >= 20 && newData.child('createdAt').val().length <= 40 && newData.child('createdAtMs').isNumber() && newData.child('createdAtMs').val() === now && newData.child('reason').isString() && newData.child('reason').val().length >= 2 && newData.child('reason').val().length <= 100",
+          "by_uid": {
+            ".validate": true
+          },
+          "createdAt": {
+            ".validate": true
+          },
+          "createdAtMs": {
+            ".validate": true
+          },
+          "reason": {
+            ".validate": true
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "thresholds": {
+        "$stockId": {
+          ".write": "auth != null && (root.child('roles').child(auth.uid).val() === 'admin' || root.child('roles').child(auth.uid).val() === 'responsable') && $stockId.matches(/^s(00[0-9]|0[1-6][0-9]|07[0-3])$/)",
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000 && ($stockId === 's032' || $stockId === 's033' || newData.val() % 1 === 0)"
+        }
+      },
+      "prices": {
+        "$productId": {
+          ".write": "auth != null && root.child('roles').child(auth.uid).val() === 'admin' && $productId.matches(/^p(00[1-9]|0[1-6][0-9]|07[0-8])$/) && newData.exists()",
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000"
+        },
+        ".validate": "newData.child('p033').val() === newData.child('p036').val() && newData.child('p034').val() === newData.child('p037').val() && newData.child('p035').val() === newData.child('p038').val()"
+      }
+    }
+  }
+}
