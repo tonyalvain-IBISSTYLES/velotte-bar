@@ -44,10 +44,10 @@ sales=function(){
  return `<div class="ux-banner" role="note"><strong>V6.1 — Parcours réception :</strong> enregistrez d’abord l’encaissement dans OPERA (2701 softs / 2702 alcools), puis la référence exacte dans Velotte Bar. Seule la confirmation Firebase valide la saisie.</div>`+html.replace('placeholder="Ex : Coca, Vittel, Heineken…"','placeholder="Nom, alias (zéro, soda, café…), code 2701 ou 2702"').replace('Aucune vente encore enregistrée sur cet appareil.','Aucune vente encore enregistrée dans les données partagées.');
 };
 function inventoryPreviewHTML(){
- const entered=Object.entries(invDraft).filter(([key,value])=>KNOWN_KEYS.has(key)&&value!==''&&value!=null&&validCount(key,Number(value)));
+ const entered=Object.entries(invDraft).filter(([key,value])=>KNOWN_KEYS.has(key)&&value!==''&&value!=null&&validCount(key,stockNumber(value)));
  if(!entered.length)return '<p class="ux-muted">Aucune quantité renseignée. Saisissez 0 pour un produit réellement épuisé, laissez vide s’il n’est pas compté.</p>';
  const lines=entered.map(([key,raw])=>{
-  const found=stockInfo(key),current=Number(raw),previous=found.remaining;
+  const found=stockInfo(key),current=stockNumber(raw),previous=found.remaining;
   const gap=previous==null?null:Math.round((current-previous)*100)/100;
   return {name:key,unit:found.meta.unit,qty:current,expected:previous,gap};
  });
@@ -64,7 +64,7 @@ const originalHome=home;
 home=function(){
  let raw=originalHome();
  const notice='<div class="notice" style="margin-top:18px"><span>🔐</span>';
- const start=raw.indexOf(notice);if(start>=0)raw=raw.slice(0,start)+`<div class="ux-banner">🔐 <b>Version collaborative V6.1 en évaluation.</b> Les données affichées proviennent de Firebase après connexion. Une écriture dans cette version utilise la même base que la V6 : ne faire aucun essai réel avant la validation des règles et d’une sauvegarde.</div>`;
+ const start=raw.indexOf(notice);if(start>=0)raw=raw.slice(0,start)+`<div class="ux-banner">🔐 <b>Version collaborative V6.1 en évaluation.</b> Les données affichées proviennent de Firebase après connexion. Cette branche V6.1 est reliée au projet Firebase TEST indépendant. Ne publiez pas de changement sur le projet de production avant validation des règles, des essais et d’une sauvegarde.</div>`;
  return raw;
 };
 const originalGuide=guide;
@@ -165,7 +165,11 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('input',e=>{
  const t=e.target;
- if(t.hasAttribute('data-invkey')){const el=document.getElementById('ux-inventory-preview');if(el)el.innerHTML=`<h3>Contrôle avant validation</h3>${inventoryPreviewHTML()}`;}
+ if(t.hasAttribute('data-invkey')){
+  const preview=t.closest('td')?.querySelector('[data-ux-bottle-draft]');
+  if(preview){const raw=String(t.value??'').trim(),num=stockNumber(raw);preview.innerHTML=raw!==''&&validCount(t.dataset.invkey,num)?bottleVisual(t.dataset.invkey,num,'draft'):'';}
+  const el=document.getElementById('ux-inventory-preview');if(el)el.innerHTML=`<h3>Contrôle avant validation</h3>${inventoryPreviewHTML()}`;
+ }
  if(['ux-compare-date','ux-compare-soft','ux-compare-alc'].includes(t.id)){
   if(t.id==='ux-compare-date')comparisonDate=t.value;
   if(t.id==='ux-compare-soft')comparisonSoft=t.value;
