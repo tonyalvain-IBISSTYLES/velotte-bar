@@ -32,3 +32,22 @@ body[data-ux-page="accueil"][data-ux-role="reception"] #screen>.metrics,body[dat
 @media(max-width:390px){.ux-fast-grid{gap:7px}.ux-fast-item{padding:9px;min-height:110px}}
 
 body.ux-submitting #product-results button,body.ux-submitting #product-results input,body.ux-submitting [data-act="checkout"]{pointer-events:none;opacity:.57}
+
+
+/* Mini Bottle — pictogrammes compacts pour les stocks comptés en bouteilles.
+   Aucune image externe, aucun effet sur les écritures Firebase. */
+.ux-stock-value,.ux-last-count{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;vertical-align:middle;font-variant-numeric:tabular-nums}
+.ux-bottle-gauge{display:inline-flex;align-items:center;justify-content:center;gap:3px;min-height:36px;padding:3px 6px 3px 5px;border:1px solid #d4e7cd;border-radius:10px;background:linear-gradient(145deg,#f9fcf5 0%,#edf7e7 100%);box-shadow:0 1px 3px rgba(38,90,55,.07);vertical-align:middle;flex-shrink:0}
+.ux-bottle{position:relative;display:inline-block;flex:0 0 17px;width:17px;height:30px}
+.ux-bottle-neck{position:absolute;top:1px;left:5px;width:7px;height:9px;border:1.4px solid #467253;border-radius:2px 2px 1px 1px;background:#eaf3e5;box-shadow:inset 1px 0 2px rgba(255,255,255,.8)}
+.ux-bottle-neck::before{content:"";position:absolute;left:-2px;top:-3px;width:9px;height:3px;border-radius:2px;background:#345d43}
+.ux-bottle-body{position:absolute;left:1px;top:9px;width:15px;height:20px;box-sizing:border-box;border:1.5px solid #477552;border-radius:5px 5px 4px 4px;background:#eaf3e7;overflow:hidden;box-shadow:inset 1px 0 3px rgba(255,255,255,.9)}
+.ux-bottle-liquid{position:absolute;bottom:0;left:0;right:0;display:block;background:linear-gradient(180deg,#bde983 0%,#8bce67 48%,#62aa5b 100%);border-radius:2px 2px 1px 1px;max-height:100%}
+.ux-bottle-body::after{content:"";position:absolute;top:2px;left:2px;width:2px;height:12px;border-radius:2px;background:rgba(255,255,255,.65);pointer-events:none}
+.ux-bottle-multi{display:inline-flex;align-items:center;justify-content:center;min-width:18px;padding:2px 3px;border-radius:6px;background:#deefd6;font-size:10px;font-weight:800;line-height:1.4;color:#2f6645;font-variant-numeric:tabular-nums}
+.ux-inv-entry{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.ux-inv-entry .inv-number{width:84px;min-width:75px;max-width:96px}
+.ux-bottle-draft{display:inline-flex;align-items:center;min-height:36px}
+.ux-bottle-draft .ux-bottle-gauge{border-color:#c4dfb7;background:#f4fbee}
+.ux-stock-value>.ux-bottle-gauge,.ux-last-count>.ux-bottle-gauge{margin-left:1px}
+@media(max-width:600px){.ux-stock-value,.ux-last-count{gap:5px}.ux-bottle-gauge{padding:2px 4px;min-height:34px}.ux-inv-entry{gap:4px}.ux-inv-entry .inv-number{width:76px;min-width:70px}}
