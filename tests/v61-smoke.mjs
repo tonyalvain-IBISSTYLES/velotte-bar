@@ -64,7 +64,7 @@ import vm from 'node:vm';
   {STOCK_KEYS:ctx.STOCK_KEYS,validCount:stockValidator,h:x=>String(x)},{timeout:2500});
  const half=bottleRenderer('martini',0.5,'stock');
  assert.equal((half.match(/class="ux-bottle"/g)||[]).length,1,'0,5 = une bouteille visuelle');
- assert(half.includes('height:50%')&&half.includes('Une'), '0,5 doit afficher 50 %');
+ assert(half.includes('height:50%')&&half.includes('bouteille entamée'), '0,5 doit afficher 50 %');
  const oneFour=bottleRenderer('martini',1.4,'stock');
  assert.equal((oneFour.match(/class="ux-bottle"/g)||[]).length,2,'1,4 = une pleine et une entamée');
  assert(oneFour.includes('height:100%')&&oneFour.includes('height:40%'), '1,4 = 100 % + 40 %');
