@@ -57,3 +57,14 @@ Ce test vérifie la **syntaxe et quelques scénarios avec des fonctions simulée
 - Les règles restent verrouillées tant que la configuration des rôles de test n’est pas validée.
 - Créer uniquement des comptes fictifs de recette. Attribuer le premier rôle `admin` dans la console TEST, au chemin `roles/<UID_TEST>`. Aucun UID administrateur de production n’est repris dans la V6.1.
 - La recette réelle (ventes, inventaires, rôles, synchronisation et coupures réseau) reste à exécuter. Les contrôles CI sont des simulations.
+
+## Amélioration V6.1 — bouteilles entamées (11 novembre 2026)
+
+- L'inventaire et les corrections de stock acceptent désormais les quantités décimales pour les références dont l'unité de stock est **bouteille** (spiritueux et sirops). Exemple : 0,5 bouteille, 1,4 bouteille. Saisie à deux décimales au maximum dans l'interface, séparateur décimal français ou point pris en charge lors de l'analyse.
+- Les fûts demeurent saisis en **litres** ; les canettes, bouteilles vendues à l'unité, capsules et doses restent des quantités **entières**.
+- Les seuils de commande peuvent aussi être fractionnaires pour les bouteilles, tout en conservant les protections pour les unités entières.
+- Les règles Firebase TEST `v61/firebase.rules.test.json` distinguent les codes de stock bouteille, litre et unité. **Les règles serveur autorisent les fractions de bouteilles dans la plage numérique définie ; la limite de 2 décimales est appliquée dans l'interface, pas par une règle de précision Firebase**.
+- La vente d'un verre de spiritueux **ne retire pas automatiquement une fraction arbitraire de bouteille** : le taux de service et les contenances ne sont pas définis de façon certaine. Le stock des références vendues à la dose affiche un suivi manuel, à actualiser avec des inventaires physiques et mouvements justifiés.
+- La suite de sécurité couvre **56 scénarios** dans l'émulateur Firebase, y compris Martini Rouge 1,4, Campari 1,6, Bailey's 0,5 et le refus des unités fractionnaires et des stocks négatifs. Le résultat CI est à vérifier après chaque changement.
+- Les sept bouteilles entamées issues de `10 OCT 26.xlsx` sont listées dans `v61/ETAPE_2_BOUTEILLES_ENTAMEES.md` ; le rapprochement Whisky J&B avec J&B Rare demande validation humaine.
+- **Aucune modification dans `beta/index.html` ni dans les règles de la base Firebase de production :** les nouveaux champs ne sont utilisables qu'après recette sur TEST puis déploiement explicitement approuvé. L'inventaire historique déjà enregistré en production est conservé.
