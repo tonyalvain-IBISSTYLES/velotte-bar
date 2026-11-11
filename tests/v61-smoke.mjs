@@ -47,7 +47,7 @@ import vm from 'node:vm';
  const validStart=html.indexOf('function validCount('),validEnd=html.indexOf('\nfunction stockNumber(',validStart);
  assert(validStart>0&&validEnd>validStart,'la vraie fonction validCount doit exister');
  const stockValidator=vm.runInNewContext('('+html.slice(validStart,validEnd)+')',{STOCK_KEYS:ctx.STOCK_KEYS},{timeout:2500});
- const parseStart=html.indexOf('function stockNumber('),parseEnd=html.indexOf('\nfunction afterInventorySale(',parseStart);
+ const parseStart=html.indexOf('function stockNumber('),parseEnd=html.indexOf('\n// Mini Bottle',parseStart);
  const parseStockNumber=vm.runInNewContext('('+html.slice(parseStart,parseEnd)+')',{}, {timeout:2500});
  assert.equal(parseStockNumber('1,4'),1.4,'saisie française avec virgule');
  assert.equal(parseStockNumber('0.5'),0.5,'saisie avec point');
