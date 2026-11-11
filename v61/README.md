@@ -68,3 +68,13 @@ Ce test vérifie la **syntaxe et quelques scénarios avec des fonctions simulée
 - La suite de sécurité couvre **56 scénarios** dans l'émulateur Firebase, y compris Martini Rouge 1,4, Campari 1,6, Bailey's 0,5 et le refus des unités fractionnaires et des stocks négatifs. Le résultat CI est à vérifier après chaque changement.
 - Les sept bouteilles entamées issues de `10 OCT 26.xlsx` sont listées dans `v61/ETAPE_2_BOUTEILLES_ENTAMEES.md` ; le rapprochement Whisky J&B avec J&B Rare demande validation humaine.
 - **Aucune modification dans `beta/index.html` ni dans les règles de la base Firebase de production :** les nouveaux champs ne sont utilisables qu'après recette sur TEST puis déploiement explicitement approuvé. L'inventaire historique déjà enregistré en production est conservé.
+
+## Mini Bottle — jauges de bouteilles compactes (11 novembre 2026)
+
+- **Stocks & commandes :** un mini-pictogramme vert apparaît immédiatement à côté de la quantité exacte, uniquement pour les références avec `stockUnit='bouteille'` (spiritueux, sirops). Les références en unités et les fûts restent inchangés.
+- **Inventaire :** même mini-jauge près du dernier comptage ; aperçu de la bouteille **pendant la saisie** d'un nouveau comptage, sans valider ni écrire dans Firebase.
+- **0,5 bouteille** : une silhouette remplie à 50 %. **1,4** : une bouteille pleine plus une silhouette à 40 %. **2,8** : petit repère « ×2 » et une bouteille à 80 %, pour conserver une largeur fixe. **0** : bouteille vide ; **jamais compté** : aucune jauge.
+- **Style** : silhouette vert foncé, reflet discret et remplissage vert citron ibis Styles, taille d'environ 35 px, adaptée à l'écran mobile ; texte numérique conservé pour une lecture exacte, libellés accessibles et infobulle explicative.
+- **Important** : le visuel représente un état déclaré en « fractions de bouteille », pas un capteur ni une déduction automatique des doses. Il n'effectue aucun calcul de vente, aucun ajustement de stock et aucune écriture Firebase.
+- **Fichiers** : `v61/index.html` (fonction `bottleVisual`), `v61/ux.css` (silhouettes CSS), `v61/ux.js` (rafraîchissement de la prévisualisation et du contrôle d'écarts), `tests/v61-smoke.mjs` (tests d'affichage et de précision).
+- **Déploiement** : branche V6.1 uniquement ; aucune modification du site de production `beta/`, du projet Firebase réel, ni des règles de production.
