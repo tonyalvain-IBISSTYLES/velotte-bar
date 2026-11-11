@@ -58,6 +58,8 @@ try{
  await expect('Seuil négatif refusé',admin.ref('/shared/thresholds/s005').set(-5),false);
  await expect('Seuil fractionnaire (unité) refusé',admin.ref('/shared/thresholds/s005').set(2.5),false);
  await expect('Seuil fractionnaire litre autorisé',admin.ref('/shared/thresholds/s032').set(2.5));
+ await expect('Seuil fractionnaire bouteille autorisé',manager.ref('/shared/thresholds/s043').set(0.5));
+ await expect('Seuil fractionnaire sirop autorisé',manager.ref('/shared/thresholds/s018').set(1.25));
  await expect('Prix valide administrateur',admin.ref('/shared/prices/p005').set(3.55));
  seedPrices.p005=3.55;
  await expect('Réception ne modifie pas prix',reception.ref('/shared/prices/p005').set(4),false);
@@ -82,12 +84,19 @@ try{
  }));
  await expect('Inventaire réel: unités et litres',reception.ref('/shared/inventories/'+id('inv01')).set(inventory('inv01',{s005:8,s032:7.5})));
  await expect('Inventaire fractionnaire unité refusé',reception.ref('/shared/inventories/'+id('inv02')).set(inventory('inv02',{s005:1.5})),false);
+ await expect('Inventaire Martini Rouge 1,4 bouteille',reception.ref('/shared/inventories/'+id('inv_bottle14')).set(inventory('inv_bottle14',{s043:1.4})));
+ await expect('Inventaire Campari 1,6 bouteille',reception.ref('/shared/inventories/'+id('inv_bottle16')).set(inventory('inv_bottle16',{s046:1.6})));
+ await expect('Inventaire Bailey 0,5 bouteille',reception.ref('/shared/inventories/'+id('inv_bottle05')).set(inventory('inv_bottle05',{s073:0.5})));
+ await expect('Inventaire sirop entamé 0,25 bouteille',reception.ref('/shared/inventories/'+id('inv_syrup25')).set(inventory('inv_syrup25',{s018:0.25})));
+ await expect('Inventaire bouteille négatif refusé',reception.ref('/shared/inventories/'+id('inv_bottle_neg')).set(inventory('inv_bottle_neg',{s043:-0.5})),false);
  await expect('Inventaire à champ inconnu refusé',reception.ref('/shared/inventories/'+id('inv03')).set(inventory('inv03',{s005:8},{secret:'x'})),false);
  await expect('Réception ne peut pas réécrire inventaire',reception.ref('/shared/inventories/'+id('inv01')).update({note:'retouché'}),false);
  const movement={id:id('mov01'),stockId:'s032',qty:8,reason:'Livraison',date,createdAt,createdAtMs:ts,by_uid:'TEST_MANAGER'};
  await expect('Réception ne modifie pas les mouvements',reception.ref('/shared/movements/'+id('mov02')).set({...movement,id:id('mov02'),by_uid:'TEST_RECEPTION'}),false);
  await expect('Responsable crée mouvement',manager.ref('/shared/movements/'+id('mov01')).set(movement));
  await expect('Mouvement unité fractionnaire refusé',manager.ref('/shared/movements/'+id('mov03')).set({...movement,id:id('mov03'),stockId:'s005',qty:1.5}),false);
+ await expect('Mouvement de 0,4 bouteille accepté',manager.ref('/shared/movements/'+id('mov04')).set({...movement,id:id('mov04'),stockId:'s043',qty:-0.4}));
+ await expect('Mouvement fractionnaire bouteille pour sirop',manager.ref('/shared/movements/'+id('mov05')).set({...movement,id:id('mov05'),stockId:'s018',qty:0.25}));
  const cancelled={by_uid:'TEST_MANAGER',createdAt,createdAtMs:ts,reason:'Erreur de saisie'};
  await expect('Réception ne peut pas annuler lot',reception.ref('/shared/cancelledBatches/'+id('batch_01')).set({...cancelled,by_uid:'TEST_RECEPTION'}),false);
  await expect('Responsable annule lot',manager.ref('/shared/cancelledBatches/'+id('batch_01')).set(cancelled));
