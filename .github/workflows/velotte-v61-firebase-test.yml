@@ -1,0 +1,35 @@
+name: Velotte V6.1 - securite Firebase TEST (emulateur)
+on:
+  push:
+    branches:
+      - feature/v61-experience-equipe-20261111
+    paths:
+      - 'v61/firebase.rules.test.json'
+      - 'v61/firebase.test.audit.json'
+      - 'tests/rules-v61-test.mjs'
+      - '.github/workflows/velotte-v61-firebase-test.yml'
+  pull_request:
+    paths:
+      - 'v61/firebase.rules.test.json'
+      - 'v61/firebase.test.audit.json'
+      - 'tests/rules-v61-test.mjs'
+      - '.github/workflows/velotte-v61-firebase-test.yml'
+permissions:
+  contents: read
+jobs:
+  rules-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Installer emulateur et outils de tests
+        run: npm install --no-save --no-package-lock --legacy-peer-deps firebase-tools@14 @firebase/rules-unit-testing@4 firebase@11
+      - name: Tester les regles sans acceder a Firebase reel
+        run: npx firebase emulators:exec --only database --project demo-velotte-v61-test-security --config v61/firebase.test.audit.json "node tests/rules-v61-test.mjs"

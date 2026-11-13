@@ -1,0 +1,27 @@
+name: Velotte V6.1 - recette ergonomique
+on:
+  pull_request:
+    paths:
+      - 'v61/**'
+      - 'tests/v61-smoke.mjs'
+      - '.github/workflows/velotte-v61-ux.yml'
+  push:
+    branches:
+      - feature/v61-experience-equipe-20261111
+    paths:
+      - 'v61/**'
+      - 'tests/v61-smoke.mjs'
+      - '.github/workflows/velotte-v61-ux.yml'
+permissions:
+  contents: read
+jobs:
+  ux-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verifier syntaxe et scenarios sans Firebase reel
+        run: node tests/v61-smoke.mjs
